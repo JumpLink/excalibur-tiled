@@ -13,8 +13,8 @@ Install using [npm](http://npmjs.org):
 The ES2015 `import` syntax is the recommended way to use Excalibur with Excalibur Tiled and is supported through a module loader like [webpack](https://github.com/excaliburjs/example-ts-webpack) or [Parcel](https://parceljs.org) with TypeScript or Babel:
 
 ```ts
-import * as ex from 'excalibur';
-import { TiledResource } from '@excaliburjs/excalibur-tiled';
+import * as ex from "excalibur";
+import { TiledResource } from "@excaliburjs/excalibur-tiled";
 
 // Create tiled map resource, pointing to static asset path
 const map = new TiledResource("/assets/map.json");
@@ -23,21 +23,19 @@ const map = new TiledResource("/assets/map.json");
 const loader = new ex.Loader([map]);
 
 // Start the game (starts the loader)
-game.start(loader).then(function() {
-   
-   console.log("Game loaded");
-   
-   // Process the data in the map as you like
-   map.data.tilesets.forEach(function(ts) {
-      console.log(ts.image, ts.imageTexture.isLoaded());
-   });
-   
-   // get a Excalibur `TileMap` instance
-   const tm = map.getTileMap();
-   
-   // draw the tile map
-   game.add(tm);
-   
+game.start(loader).then(function () {
+  console.log("Game loaded");
+
+  // Process the data in the map as you like
+  map.data.tilesets.forEach(function (ts) {
+    console.log(ts.image, ts.imageTexture.isLoaded());
+  });
+
+  // get a Excalibur `TileMap` instance
+  const tm = map.getTileMap();
+
+  // draw the tile map
+  game.add(tm);
 });
 ```
 
@@ -52,16 +50,25 @@ You will need to modify your webpack configuration to load Tiled JSON files usin
 In your HTML file, add a reference **dist/excalibur-tiled.min.js** in your page:
 
 ```html
-<script type="text/javascript" src="node_modules/excalibur/dist/excalibur.min.js"></script>
-<script type="text/javascript" src="node_modules/@excaliburjs/excalibur-tiled/dist/excalibur-tiled.min.js"></script>
+<script
+  type="text/javascript"
+  src="node_modules/excalibur/dist/excalibur.min.js"
+></script>
+<script
+  type="text/javascript"
+  src="node_modules/@excaliburjs/excalibur-tiled/dist/excalibur-tiled.min.js"
+></script>
 ```
 
 and then you can use it like this:
 
 ```js
-
 // New game
-const game = new ex.Engine({ width: 500, height: 400, canvasElementId: "game" });
+const game = new ex.Engine({
+  width: 500,
+  height: 400,
+  canvasElementId: "game",
+});
 
 // Create a new TiledResource loadable
 const map = new Extensions.Tiled.TiledResource("test.json");
@@ -70,21 +77,19 @@ const map = new Extensions.Tiled.TiledResource("test.json");
 const loader = new ex.Loader([map]);
 
 // Start the game (starts the loader)
-game.start(loader).then(function() {
-   
-   console.log("Game loaded");
-   
-   // Process the data in the map as you like
-   map.data.tilesets.forEach(function(ts) {
-      console.log(ts.image, ts.imageTexture.isLoaded());
-   });
-   
-   // get a Excalibur `TileMap` instance
-   const tm = map.getTileMap();
-   
-   // draw the tile map
-   game.add(tm);
-   
+game.start(loader).then(function () {
+  console.log("Game loaded");
+
+  // Process the data in the map as you like
+  map.data.tilesets.forEach(function (ts) {
+    console.log(ts.image, ts.imageTexture.isLoaded());
+  });
+
+  // get a Excalibur `TileMap` instance
+  const tm = map.getTileMap();
+
+  // draw the tile map
+  game.add(tm);
 });
 ```
 
@@ -92,7 +97,7 @@ The dist uses a UMD build and will attach itself to the `ex.Extensions.Tiled` gl
 
 ## Documentation
 
-The `TiledResource` loadable will load the map file you specify along with any referenced tile set assets (images). 
+The `TiledResource` loadable will load the map file you specify along with any referenced tile set assets (images).
 
 ### Handling Tiled Paths
 
@@ -147,11 +152,11 @@ If you need to override this behavior, you can set `imagePathAccessor` or `exter
 var map = new Extensions.Tiled.TiledResource("map.json");
 
 map.imagePathAccessor = function (path, tileset) {
-   return "/assets/tx/" + path;
-}
+  return "/assets/tx/" + path;
+};
 map.externalTilesetPathAccessor = function (path, tileset) {
-   return "/assets/tsx/" + path;
-}
+  return "/assets/tsx/" + path;
+};
 ```
 
 That will fix the paths:
@@ -167,7 +172,7 @@ Only supports JSON file format with CSV or Base64 (uncompressed) tile layer form
 
 ## Contributing
 
-- Built with webpack 3
+- Built with webpack 5
 - Uses webpack-dev-server
 
 To start development server:

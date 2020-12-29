@@ -1,9 +1,13 @@
 {
    "compilerOptions": {
-      "module": "commonjs",
-      "target": "ES5",
-      "declaration": true,
-      "outDir": "../lib",
-      "sourceMap": true
+     "allowSyntheticDefaultImports": true,
+     "esModuleInterop": true,
+     "moduleResolution": "node",
+     "target": "es5",
+     "lib": ["ESNext", "DOM"],
+     "module": "esnext",
+     "sourceMap": true,
+     "outDir": "./dist/"
    }
 }
+ 
