@@ -1,6 +1,6 @@
-import { ITiledMapObject } from "./tiled-map-object";
+import { TiledMapObject } from './tiled-map-object';
 
-export interface ITiledMapLayer {
+export interface TiledMapLayer {
   data: number[] | string;
   height: number;
   name: string;
@@ -22,5 +22,5 @@ export interface ITiledMapLayer {
    * Draw order (topdown (default), index)
    */
   draworder: string;
-  objects: ITiledMapObject[];
+  objects: TiledMapObject[];
 }

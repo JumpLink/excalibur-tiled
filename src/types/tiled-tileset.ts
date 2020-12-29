@@ -1,13 +1,14 @@
-import { ITiledMapTerrain } from "./tiled-map-terrain";
+import type { Texture } from 'excalibur';
+import { TiledMapTerrain } from './tiled-map-terrain';
 
-export interface ITiledTileSet {
+export interface TiledTileset {
   firstgid: number;
   image: string;
 
   /**
    * Excalibur texture associated with this tileset
    */
-  imageTexture: ex.Texture;
+  imageTexture: Texture;
   imageheight: number;
   imagewidth: number;
   margin: number;
@@ -18,7 +19,7 @@ export interface ITiledTileSet {
   tileheight: number;
   tilewidth: number;
   transparentcolor: string;
-  terrains: ITiledMapTerrain[];
+  terrains: TiledMapTerrain[];
   tiles: { [key: string]: { terrain: number[] } };
 
   /**

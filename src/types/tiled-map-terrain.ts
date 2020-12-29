@@ -1,4 +1,4 @@
-export interface ITiledMapTerrain {
+export interface TiledMapTerrain {
   name: string;
   tile: number;
 }

@@ -1,7 +1,7 @@
 export enum TiledMapFormat {
   /**
    * TMX map layer format
-   * @unsupported
+   * Note: Currently unsupported
    */
   TMX,
 

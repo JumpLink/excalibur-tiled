@@ -1,4 +1,4 @@
-export interface ITiledMapObject {
+export interface TiledMapObject {
   id: number;
 
   /**

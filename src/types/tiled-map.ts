@@ -1,5 +1,5 @@
-import { ITiledTileSet } from "./tiled-tileset";
-import { ITiledMapLayer } from "./tiled-map-layer";
+import { TiledTileset } from './tiled-tileset';
+import { TiledMapLayer } from './tiled-map-layer';
 
 /**
  * Tiled Map Interface
@@ -7,10 +7,10 @@ import { ITiledMapLayer } from "./tiled-map-layer";
  * Represents the interface for the Tiled exported data structure (JSON). Used
  * when loading resources via Resource loader.
  */
-export interface ITiledMap {
+export interface TiledMap {
   width: number;
   height: number;
-  layers: ITiledMapLayer[];
+  layers: TiledMapLayer[];
   nextobjectid: number;
 
   /**
@@ -25,6 +25,6 @@ export interface ITiledMap {
   renderorder: string;
   tileheight: number;
   tilewidth: number;
-  tilesets: ITiledTileSet[];
+  tilesets: TiledTileset[];
   version: number;
 }

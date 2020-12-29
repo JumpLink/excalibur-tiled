@@ -1,22 +1,16 @@
 import {
   Resource,
-  Promise,
   Texture,
   TileMap,
   TileSprite,
   SpriteSheet,
   Logger,
-} from "excalibur";
-import {
-  ITiledMap,
-  ITiledTileSet,
-  PathAccessor,
-  TiledMapFormat,
-} from "./types";
-import { TiledsetManager } from "./tileset-manager";
-import pako from "pako";
+} from 'excalibur';
+import { TiledMap, TiledTileset, PathAccessor, TiledMapFormat } from './types';
+// import { TiledsetManager } from './tileset-manager';
+import pako from 'pako';
 
-export class TiledResource extends Resource<ITiledMap> {
+export class TiledResource extends Resource<TiledMap> {
   protected mapFormat: TiledMapFormat;
   public path: string;
 
@@ -24,24 +18,24 @@ export class TiledResource extends Resource<ITiledMap> {
   public externalTilesetPathAccessor: PathAccessor = this.defaultPathAccessor;
 
   constructor(path: string, mapFormat = TiledMapFormat.JSON) {
-    super(path, "json");
+    super(path, 'json');
     if (mapFormat !== TiledMapFormat.JSON) {
       throw `The format ${mapFormat} is not currently supported. Please export Tiled map as JSON.`;
     }
 
-    console.debug("TiledResource path", path);
+    console.debug('TiledResource path', path);
 
     this.mapFormat = mapFormat;
   }
 
   protected defaultPathAccessor(p: string) {
     // Use absolute path if specified
-    if (p.indexOf("/") === 0) {
+    if (p.indexOf('/') === 0) {
       return p;
     }
 
     // Load relative to map path
-    const pp = this.path.split("/");
+    const pp = this.path.split('/');
     const relPath = pp.concat([]);
 
     if (pp.length > 0) {
@@ -49,93 +43,47 @@ export class TiledResource extends Resource<ITiledMap> {
       relPath.splice(-1);
     }
     relPath.push(p);
-    return relPath.join("/");
+    return relPath.join('/');
   }
 
-  protected loadTilesets() {
-    const tilesets: Promise<ITiledTileSet>[] = [];
-    for (const tileset of this.data.tilesets) {
-      if (tileset.source) {
-        const tilesetResource = new TiledsetResource(
-          this.externalTilesetPathAccessor(tileset.source, tileset)
+  public async load(): Promise<TiledMap> {
+    const map = await super.load();
+
+    // Loop through loaded tileset data
+    // If we find an image property, then
+    // load the image and sprite
+
+    // If we find a source property, then
+    // load the tileset data, merge it with
+    // existing data, and load the image and sprite
+
+    for (const ts of this.data.tilesets) {
+      if (ts.source) {
+        const tileset = new Resource<TiledTileset>(
+          this.externalTilesetPathAccessor(ts.source, ts),
+          'json'
         );
 
-        tilesets.push(
-          tilesetResource.load().then((external) => {
-            Object.assign(tileset, external);
-          })
-        );
+        const external = await tileset.load();
+        Object.assign(ts, external);
       }
     }
-    return tilesets;
-  }
 
-  public load(): Promise<ITiledMap> {
-    const p = new Promise<ITiledMap>();
+    for (const ts of this.data.tilesets) {
+      const tx = new Texture(this.imagePathAccessor(ts.image, ts));
+      ts.imageTexture = tx;
+      await tx.load();
 
-    super.load().then((map) => {
-      let promises: Promise<any>[] = [];
-
-      // Loop through loaded tileset data
-      // If we find an image property, then
-      // load the image and sprite
-
-      // If we find a source property, then
-      // load the tileset data, merge it with
-      // existing data, and load the image and sprite
-
-      this.data.tilesets.forEach((ts) => {
-        if (ts.source) {
-          const tileset = new TiledsetResource(
-            this.externalTilesetPathAccessor(ts.source, ts)
-          );
-
-          promises.push(
-            tileset.load().then((external) => {
-              Object.assign(ts, external);
-            })
-          );
-        }
-      });
-
-      // wait or immediately resolve pending promises
-      // for external tilesets
-      Promise.join.apply(this, promises).then(
-        () => {
-          // clear pending promises
-          promises = [];
-
-          // retrieve images from tilesets and create textures
-          this.data.tilesets.forEach((ts) => {
-            const tx = new Texture(this.imagePathAccessor(ts.image, ts));
-            ts.imageTexture = tx;
-            promises.push(tx.load());
-
-            Logger.getInstance().debug(
-              "[Tiled] Loading associated tileset: " + ts.image
-            );
-          });
-
-          Promise.join.apply(this, promises).then(
-            () => {
-              p.resolve(map);
-            },
-            (value?: any) => {
-              p.reject(value);
-            }
-          );
-        },
-        (value?: any) => {
-          p.reject(value);
-        }
+      Logger.getInstance().debug(
+        '[Tiled] Loading associated tileset: ' + ts.image
       );
-    });
+    }
 
-    return p;
+    return map;
   }
 
-  public processData(data: ITiledMap): ITiledMap {
-    if (typeof data !== "object") {
+  public processData(data: TiledMap): TiledMap {
+    if (typeof data !== 'object') {
       throw `Tiled map resource ${this.path} is not the correct content type`;
     }
     if (data === void 0) {
@@ -148,7 +96,7 @@ export class TiledResource extends Resource<ITiledMap> {
     }
   }
 
-  public getTilesetForTile(gid: number): ITiledTileSet {
+  public getTilesetForTile(gid: number): TiledTileset {
     for (let i = this.data.tilesets.length - 1; i >= 0; i--) {
       const ts = this.data.tilesets[i];
 
@@ -186,7 +134,7 @@ export class TiledResource extends Resource<ITiledMap> {
     }
 
     for (const layer of this.data.layers) {
-      if (layer.type === "tilelayer") {
+      if (layer.type === 'tilelayer') {
         for (let i = 0; i < layer.data.length; i++) {
           const gid = <number>layer.data[i];
 
@@ -208,16 +156,16 @@ export class TiledResource extends Resource<ITiledMap> {
 /**
  * Handles parsing of JSON tiled data
  */
-const parseJsonMap = (data: ITiledMap): ITiledMap => {
+const parseJsonMap = (data: TiledMap): TiledMap => {
   // Decompress layers
   if (data.layers) {
     for (const layer of data.layers) {
-      if (typeof layer.data === "string") {
-        if (layer.encoding === "base64") {
+      if (typeof layer.data === 'string') {
+        if (layer.encoding === 'base64') {
           layer.data = decompressors.decompressBase64(
             <string>layer.data,
             layer.encoding,
-            layer.compression || ""
+            layer.compression || ''
           );
         }
       } else {
@@ -251,27 +199,42 @@ const decompressors = {
     let arr: number[] | Uint8Array;
 
     if (b64.length % 4 > 0) {
-      throw new Error("Invalid string. Length must be a multiple of 4");
+      throw new Error('Invalid string. Length must be a multiple of 4');
     }
 
-    const Arr = typeof Uint8Array !== "undefined" ? Uint8Array : Array;
+    const Arr = typeof Uint8Array !== 'undefined' ? Uint8Array : Array;
 
-    const PLUS = "+".charCodeAt(0);
-    const SLASH = "/".charCodeAt(0);
-    const NUMBER = "0".charCodeAt(0);
-    const LOWER = "a".charCodeAt(0);
-    const UPPER = "A".charCodeAt(0);
-    const PLUS_URL_SAFE = "-".charCodeAt(0);
-    const SLASH_URL_SAFE = "_".charCodeAt(0);
+    const PLUS = '+'.charCodeAt(0);
+    const SLASH = '/'.charCodeAt(0);
+    const NUMBER = '0'.charCodeAt(0);
+    const LOWER = 'a'.charCodeAt(0);
+    const UPPER = 'A'.charCodeAt(0);
+    const PLUS_URL_SAFE = '-'.charCodeAt(0);
+    const SLASH_URL_SAFE = '_'.charCodeAt(0);
 
+    /**
+     *
+     */
     function decode(elt: string) {
       const code = elt.charCodeAt(0);
-      if (code === PLUS || code === PLUS_URL_SAFE) return 62; // '+'
-      if (code === SLASH || code === SLASH_URL_SAFE) return 63; // '/'
-      if (code < NUMBER) return -1; // no match
-      if (code < NUMBER + 10) return code - NUMBER + 26 + 26;
-      if (code < UPPER + 26) return code - UPPER;
-      if (code < LOWER + 26) return code - LOWER + 26;
+      if (code === PLUS || code === PLUS_URL_SAFE) {
+        return 62;
+      } // '+'
+      if (code === SLASH || code === SLASH_URL_SAFE) {
+        return 63;
+      } // '/'
+      if (code < NUMBER) {
+        return -1;
+      } // no match
+      if (code < NUMBER + 10) {
+        return code - NUMBER + 26 + 26;
+      }
+      if (code < UPPER + 26) {
+        return code - UPPER;
+      }
+      if (code < LOWER + 26) {
+        return code - LOWER + 26;
+      }
     }
 
     // the number of equal signs (place holders)
@@ -281,7 +244,7 @@ const decompressors = {
     // this is just a cheap hack to not do indexOf twice
     const len = b64.length;
     const placeHolders =
-      b64.charAt(len - 2) === "=" ? 2 : b64.charAt(len - 1) === "=" ? 1 : 0;
+      b64.charAt(len - 2) === '=' ? 2 : b64.charAt(len - 1) === '=' ? 1 : 0;
 
     // base64 is 4/3 + up to two characters of the original data
     arr = new Arr((b64.length * 3) / 4 - placeHolders);
@@ -291,6 +254,9 @@ const decompressors = {
 
     let L = 0;
 
+    /**
+     *
+     */
     function push(v: number) {
       arr[L++] = v;
     }
@@ -320,7 +286,7 @@ const decompressors = {
 
     // Byte array
     // handle compression
-    if ("zlib" === compression || "gzip" === compression) {
+    if ('zlib' === compression || 'gzip' === compression) {
       arr = pako.inflate(arr);
     }
 

@@ -60,6 +60,9 @@ module.exports = {
       eslint: {
         files: "./src/**/*.ts",
       },
+      typescript: {
+        configFile: "./src/tsconfig.json",
+      },
     }),
   ],
 };

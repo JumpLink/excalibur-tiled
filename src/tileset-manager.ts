@@ -1,19 +1,22 @@
-import { Resource, Promise as ExPromise } from "excalibur";
-import { ITiledTileSet, PathAccessor } from "./types";
-import { basename } from "./helper/path";
+import { Resource } from 'excalibur';
+import { TiledTileset, PathAccessor } from './types';
+import { basename } from './helper/path';
 
 export interface TiledTilesetResourceList {
-  [filename: string]: Resource<ITiledTileSet>;
+  [filename: string]: TiledTileset;
 }
 
-export class TiledsetManager extends Resource<ITiledTileSet> {
+export class TiledsetManager {
   protected tilesets: TiledTilesetResourceList = {};
+  protected rootPath: string;
 
   public pathAccessor: PathAccessor = this.defaultPathAccessor;
 
-  // constructor() {}
+  constructor(rootPath: string) {
+    this.rootPath = rootPath;
+  }
 
-  public load(path: string, tileset: Partial<ITiledTileSet> = {}) {
+  public async load(path: string, tileset: Partial<TiledTileset> = {}) {
     path = this.pathAccessor(path);
     const filename = basename(path);
     if (this.tilesets[filename]) {
@@ -21,30 +24,28 @@ export class TiledsetManager extends Resource<ITiledTileSet> {
         `A tileset with the name of "${filename}" has already been registered!`
       );
     }
-    const tilesetResource = new Resource<ITiledTileSet>(path, "json");
+    const tilesetResource = new Resource<TiledTileset>(path, 'json');
 
     if (this.isExternal(tileset)) {
-      return tilesetResource.load().then((external) => {
-        Object.assign(tileset, external);
-        return tileset;
-      });
+      const external = await tilesetResource.load();
+      Object.assign(tileset, external);
     }
 
-    ExPromise.resolve();
+    this.tilesets[filename] = tileset as TiledTileset;
   }
 
-  protected isExternal(tileset: Partial<ITiledTileSet>) {
+  protected isExternal(tileset: Partial<TiledTileset>) {
     return Boolean(tileset.source);
   }
 
   protected defaultPathAccessor(p: string) {
     // Use absolute path if specified
-    if (p.indexOf("/") === 0) {
+    if (p.indexOf('/') === 0) {
       return p;
     }
 
     // Load relative to map path
-    const pp = this.path.split("/");
+    const pp = this.rootPath.split('/');
     const relPath = pp.concat([]);
 
     if (pp.length > 0) {
@@ -52,6 +53,6 @@ export class TiledsetManager extends Resource<ITiledTileSet> {
       relPath.splice(-1);
     }
     relPath.push(p);
-    return relPath.join("/");
+    return relPath.join('/');
   }
 }
