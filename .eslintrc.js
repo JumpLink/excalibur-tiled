@@ -43,7 +43,7 @@ module.exports = {
         },
       },
     ],
-    '@typescript-eslint/indent': ['error', 2],
+    '@typescript-eslint/indent': ['off'], // We use prettier for this
     '@typescript-eslint/no-empty-function': 'error',
     curly: 'error',
     'dot-notation': 'error',
@@ -66,7 +66,7 @@ module.exports = {
     radix: 'error',
     'max-len': ['error', { code: 140 }],
     semi: ['error', 'always'],
-    'comma-dangle': ['off'],
+    'comma-dangle': ['off'], // We use prettier for this
     'no-trailing-spaces': 'error',
     eqeqeq: ['error', 'smart'],
     'no-irregular-whitespace': 'error',
