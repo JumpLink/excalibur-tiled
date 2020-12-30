@@ -24,6 +24,7 @@ export interface TiledTileset {
 
   /**
    * Refers to external tileset file (should be JSON)
+   * Only defined on external tilesets
    */
-  source: string;
+  source?: string;
 }

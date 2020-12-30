@@ -1,26 +1,26 @@
-import {
-  Resource,
-  Texture,
-  TileMap,
-  TileSprite,
-  SpriteSheet,
-  Logger,
-} from 'excalibur';
-import { TiledMap, TiledTileset, PathAccessor, TiledMapFormat } from './types';
-// import { TiledsetManager } from './tileset-manager';
+import { Resource, TileMap, TileSprite, SpriteSheet } from 'excalibur';
+import { TiledMap, TiledTileset, TiledMapFormat } from './types';
+import { TilesetManager } from './tileset-manager';
 import pako from 'pako';
 
 export class TiledResource extends Resource<TiledMap> {
   protected mapFormat: TiledMapFormat;
+  protected tilesetManager: TilesetManager;
   public path: string;
 
-  public imagePathAccessor: PathAccessor = this.defaultPathAccessor;
-  public externalTilesetPathAccessor: PathAccessor = this.defaultPathAccessor;
-
-  constructor(path: string, mapFormat = TiledMapFormat.JSON) {
+  constructor(
+    path: string,
+    mapFormat = TiledMapFormat.JSON,
+    tilesetManager?: TilesetManager
+  ) {
     super(path, 'json');
     if (mapFormat !== TiledMapFormat.JSON) {
       throw `The format ${mapFormat} is not currently supported. Please export Tiled map as JSON.`;
+    }
+    if (tilesetManager) {
+      this.tilesetManager = tilesetManager;
+    } else {
+      this.tilesetManager = new TilesetManager(path);
     }
 
     console.debug('TiledResource path', path);
@@ -28,57 +28,9 @@ export class TiledResource extends Resource<TiledMap> {
     this.mapFormat = mapFormat;
   }
 
-  protected defaultPathAccessor(p: string) {
-    // Use absolute path if specified
-    if (p.indexOf('/') === 0) {
-      return p;
-    }
-
-    // Load relative to map path
-    const pp = this.path.split('/');
-    const relPath = pp.concat([]);
-
-    if (pp.length > 0) {
-      // remove file part of path
-      relPath.splice(-1);
-    }
-    relPath.push(p);
-    return relPath.join('/');
-  }
-
   public async load(): Promise<TiledMap> {
     const map = await super.load();
-
-    // Loop through loaded tileset data
-    // If we find an image property, then
-    // load the image and sprite
-
-    // If we find a source property, then
-    // load the tileset data, merge it with
-    // existing data, and load the image and sprite
-
-    for (const ts of this.data.tilesets) {
-      if (ts.source) {
-        const tileset = new Resource<TiledTileset>(
-          this.externalTilesetPathAccessor(ts.source, ts),
-          'json'
-        );
-
-        const external = await tileset.load();
-        Object.assign(ts, external);
-      }
-    }
-
-    for (const ts of this.data.tilesets) {
-      const tx = new Texture(this.imagePathAccessor(ts.image, ts));
-      ts.imageTexture = tx;
-      await tx.load();
-
-      Logger.getInstance().debug(
-        '[Tiled] Loading associated tileset: ' + ts.image
-      );
-    }
-
+    this.data.tilesets = await this.tilesetManager.loadMany(this.data.tilesets);
     return map;
   }
 

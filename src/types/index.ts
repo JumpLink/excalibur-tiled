@@ -4,4 +4,5 @@ export * from './tiled-map-layer';
 export * from './tiled-map-object';
 export * from './tiled-map-terrain';
 export * from './tiled-map';
+export * from './tiled-tileset-source';
 export * from './tiled-tileset';
