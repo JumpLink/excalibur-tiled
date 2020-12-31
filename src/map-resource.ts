@@ -1,12 +1,13 @@
 import { Resource, TileMap, TileSprite, SpriteSheet } from 'excalibur';
-import { TiledMap, TiledTileset, TiledMapFormat } from './types';
+import { TiledMap, TiledTileset, TiledMapFormat, PathResolve } from './types';
 import { decompressBase64, decompressCsv } from './helper/decompress';
 import { TilesetResource } from './tileset-resource';
 
 export class MapResource extends Resource<TiledMap> {
   protected mapFormat: TiledMapFormat;
-  // protected tilesetResources: TilesetResource[] = [];
-  public path: string;
+
+  // Resolve path alias
+  public resolve: PathResolve = {};
 
   constructor(path: string, mapFormat = TiledMapFormat.JSON) {
     super(path, 'json');
@@ -14,17 +15,22 @@ export class MapResource extends Resource<TiledMap> {
       throw `The format ${mapFormat} is not currently supported. Please export Tiled map as JSON.`;
     }
 
-    console.debug('TiledResource path', path);
-
     this.mapFormat = mapFormat;
   }
 
   public async load(): Promise<TiledMap> {
     const map = await super.load();
-    for (let ts of this.data.tilesets) {
-      const tilesetResource = new TilesetResource(this.path, ts);
-      ts = await tilesetResource.load();
+
+    for (let i = 0; i < this.data.tilesets.length; i++) {
+      const tilesetResource = new TilesetResource(
+        this.path,
+        this.data.tilesets[i]
+      );
+      tilesetResource.resolve = this.resolve;
+      this.data.tilesets[i] = await tilesetResource.load();
     }
+
+    console.debug('[MapResource] tilesets', this.data.tilesets);
 
     return map;
   }
@@ -69,6 +75,13 @@ export class MapResource extends Resource<TiledMap> {
     for (const ts of this.data.tilesets) {
       const cols = Math.floor(ts.imagewidth / ts.tilewidth);
       const rows = Math.floor(ts.imageheight / ts.tileheight);
+      this.logger.debug('[MapResource] cols', cols, 'rows', rows);
+      this.logger.debug(
+        '[MapResource] tilewidth',
+        ts.tilewidth,
+        'tileheight',
+        ts.tileheight
+      );
       const ss = new SpriteSheet(
         ts.imageTexture,
         cols,

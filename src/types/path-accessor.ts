@@ -1,2 +1,2 @@
-import type { TiledTileset } from './tiled-tileset';
-export type PathAccessor = (path: string, ts?: TiledTileset) => string;
+import type { PathResolve } from './path-resolve';
+export type PathAccessor = (path: string, resolve?: PathResolve) => string;

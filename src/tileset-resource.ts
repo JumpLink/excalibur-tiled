@@ -1,22 +1,34 @@
 import { Resource, Logger, Texture } from 'excalibur';
 import { defaultPathAccessor } from './helper/path';
-import { TiledTileset, TiledTilesetSource, PathAccessor } from './types';
+import {
+  TiledTileset,
+  TiledTilesetSource,
+  PathAccessor,
+  PathResolve,
+} from './types';
 
 export class TilesetResource extends Resource<
   TiledTileset | TiledTilesetSource
 > {
   protected log = Logger.getInstance();
   protected rootPath: string;
+  protected originalData: TiledTileset | TiledTilesetSource;
+  // Resolve path alias
+  public resolve: PathResolve = {};
 
   // Overwriteable
-  public pathAccessor: PathAccessor = this.defaultPathAccessor;
+  public pathAccessor: PathAccessor;
   // Overwriteable
-  public imagePathAccessor: PathAccessor = this.defaultPathAccessor;
+  public imagePathAccessor: PathAccessor;
 
   constructor(rootPath: string, tileset: TiledTileset | TiledTilesetSource) {
     super(tileset.source || rootPath, 'json');
-    this.data = tileset;
+    this.originalData = tileset;
     this.rootPath = rootPath;
+
+    // Overwriteables
+    this.pathAccessor = defaultPathAccessor.bind(this, this.rootPath);
+    this.imagePathAccessor = defaultPathAccessor.bind(this, this.rootPath);
   }
 
   /**
@@ -29,18 +41,21 @@ export class TilesetResource extends Resource<
    * existing data, and load the image and sprite
    */
   public async load(): Promise<TiledTileset> {
-    this.log.debug('[TilesetResource] Load', this.data);
+    this.log.debug('[TilesetResource] Load', this.originalData);
 
     // Load by tileset source
     if (this.isExternal()) {
-      this.log.debug('Load external tileset..', this.data.source);
+      this.log.debug('Load external tileset..', this.originalData.source);
       await this.loadDataExternal();
 
-      this.log.debug('External tileset loaded: ', this.data);
+      this.log.debug('External tileset loaded', this.data);
 
       // Is not external, set tileset directly
     } else {
-      this.log.debug('[TilesetResource] No external tileset', this.data);
+      this.log.debug(
+        '[TilesetResource] No external tileset',
+        this.originalData
+      );
     }
 
     if (!this.data) {
@@ -52,21 +67,18 @@ export class TilesetResource extends Resource<
   }
 
   protected isExternal() {
-    return Boolean(this.data.source);
+    return Boolean(this.originalData.source);
   }
 
-  protected async loadDataExternal(
-    tileset: Partial<TiledTilesetSource> = {},
-    source?: string
-  ) {
-    source = source || tileset.source;
-    source = this.pathAccessor(source);
-    this.log.debug('[TilesetResource] loadDataExternal', source);
-    const external = await super.load();
-    this.log.debug('[TilesetResource] external', external);
-    Object.assign(tileset, external);
+  protected async loadDataExternal() {
+    this.log.debug('[TilesetResource] backupData', this.originalData);
+    this.path = this.pathAccessor(this.originalData.source, this.resolve);
+    this.log.debug('[TilesetResource] loadDataExternal', this.path);
+    const data = await super.load();
+    this.log.debug('[TilesetResource] data', data);
+    Object.assign(data, this.originalData);
 
-    return tileset as TiledTileset;
+    return this.data as TiledTileset;
   }
 
   protected async loadImage() {
@@ -76,14 +88,10 @@ export class TilesetResource extends Resource<
       this.log.warn('No image found in tileset!', tileset);
       return;
     }
-    const tx = new Texture(this.imagePathAccessor(tileset.image, tileset));
+    const tx = new Texture(this.imagePathAccessor(tileset.image, this.resolve));
     tileset.imageTexture = tx;
     await tx.load();
 
     this.log.debug('[Tiled] Loading associated tileset: ' + tileset.image);
-  }
-
-  protected defaultPathAccessor(p: string) {
-    return defaultPathAccessor(this.path, p);
   }
 }

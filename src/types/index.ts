@@ -1,4 +1,5 @@
 export * from './path-accessor';
+export * from './path-resolve';
 export * from './tiled-map-format';
 export * from './tiled-map-layer';
 export * from './tiled-map-object';
