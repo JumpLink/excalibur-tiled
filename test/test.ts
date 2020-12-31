@@ -1,16 +1,16 @@
-import * as ex from 'excalibur';
-import * as Extensions from '../dist/excalibur-tiled';
+import { Input, Engine, Loader } from 'excalibur';
+import { MapResource } from '../dist/excalibur-tiled';
 
-var game = new ex.Engine({
+var game = new Engine({
   width: 500,
   height: 400,
   canvasElementId: 'game',
-  pointerScope: ex.Input.PointerScope.Canvas,
+  pointerScope: Input.PointerScope.Canvas,
 });
 
 var start = (mapFile) => {
-  var map = new Extensions.TiledResource(mapFile);
-  var loader = new ex.Loader([map]);
+  var map = new MapResource(mapFile);
+  var loader = new Loader([map]);
 
   game.currentScene.tileMaps = [];
   game.start(loader).then(function () {

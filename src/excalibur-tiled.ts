@@ -1,3 +1,3 @@
-export * from './tiled-resource';
-export * from './tileset-manager';
+export * from './map-resource';
+export * from './tileset-resource';
 export * from './types';
