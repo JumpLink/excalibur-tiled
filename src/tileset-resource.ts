@@ -56,6 +56,7 @@ export class TilesetResource extends Resource<
         '[TilesetResource] No external tileset',
         this.originalData
       );
+      this.data = this.originalData;
     }
 
     if (!this.data) {

@@ -1,31 +1,34 @@
-import { Input, Engine, Loader } from 'excalibur';
+import { Input, Engine, Loader, Logger, LogLevel } from 'excalibur';
 import { MapResource } from '../dist/excalibur-tiled';
 
-var game = new Engine({
+Logger.getInstance().defaultLevel = LogLevel.Debug;
+
+const game = new Engine({
   width: 500,
   height: 400,
   canvasElementId: 'game',
   pointerScope: Input.PointerScope.Canvas,
 });
 
-var start = (mapFile) => {
-  var map = new MapResource(mapFile);
-  var loader = new Loader([map]);
+const start = (mapFile) => {
+  const map = new MapResource(mapFile);
+  const loader = new Loader([map]);
+  const log = Logger.getInstance();
 
   game.currentScene.tileMaps = [];
   game.start(loader).then(function () {
     map.data.tilesets.forEach(function (ts) {
-      console.log(ts.image, ts.imageTexture.isLoaded());
+      log.info(ts.image, ts.imageTexture.isLoaded());
     });
 
-    var tm = map.getTileMap();
+    const tm = map.getTileMap();
 
     game.add(tm);
   });
 };
 
 document.getElementById('select-map').addEventListener('change', (e) => {
-  var map = (e.target as HTMLSelectElement).value;
+  const map = (e.target as HTMLSelectElement).value;
 
   if (map) {
     start(map);
